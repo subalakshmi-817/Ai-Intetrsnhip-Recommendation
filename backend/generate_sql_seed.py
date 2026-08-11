@@ -8,7 +8,7 @@ with open(csv_path, mode="r", encoding="utf-8") as f:
     rows = list(reader)
 
 with open(sql_path, mode="w", encoding="utf-8") as f:
-    f.write("-- Seed Data: 150 Internships for Supabase\n\n")
+    f.write("-- Seed Data: 150 Internships for Supabase SQL Editor\n\n")
     f.write("INSERT INTO public.internships (title, role, company, company_name, domain, skills, required_skills, location, mode, type, stipend, duration, eligibility, description, status)\nVALUES\n")
     
     values_list = []
@@ -19,9 +19,9 @@ with open(sql_path, mode="w", encoding="utf-8") as f:
         company_name = row["company_name"].replace("'", "''")
         domain = row["domain"].replace("'", "''")
         
-        # Skills array string
+        raw_skills = row["skills"].replace("{", "").replace("}", "").replace('"', "")
         skills_items = []
-        for s in row["skills"].split(","):
+        for s in raw_skills.split(","):
             cleaned = s.strip().replace("'", "''")
             if cleaned:
                 skills_items.append(f"'{cleaned}'")
@@ -40,4 +40,4 @@ with open(sql_path, mode="w", encoding="utf-8") as f:
     f.write(",\n".join(values_list))
     f.write(";\n")
 
-print(f"Generated updated SQL seed file at '{sql_path}' with {len(rows)} records.")
+print(f"Generated clean SQL seed file at '{sql_path}' with {len(rows)} records.")
