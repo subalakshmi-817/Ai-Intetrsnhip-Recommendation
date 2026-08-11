@@ -36,53 +36,45 @@ companies = [
     "Adobe", "Salesforce", "IBM", "Intel", "Oracle", "Uber", "Airbnb",
     "Stripe", "Spotify", "Databricks", "Snowflake", "Palantir", "Scale AI",
     "Anthropic", "Cohere", "Hugging Face", "Mistral AI", "DeepMind",
-    "TechCorp Labs", "InnovateTech", "DataSphere Solutions", "CloudScale", "NextGen AI"
+    "Wipro", "Zoho", "Accenture", "Cognizant", "Infosys", "TCS"
 ]
 
 locations = [
     "Remote", "San Francisco, CA", "New York, NY", "Austin, TX", "Seattle, WA",
-    "Boston, MA", "Bengaluru, India", "Hyderabad, India", "London, UK", "Toronto, Canada",
-    "Berlin, Germany", "Hybrid (San Francisco, CA)", "Hybrid (Bengaluru, India)", "Hybrid (New York, NY)"
+    "Bengaluru, India", "Hyderabad, India", "Chennai, India", "London, UK", "Toronto, Canada"
 ]
 
 stipends = [
     "$1,500 / month", "$2,000 / month", "$2,500 / month", "$3,000 / month",
-    "$4,000 / month", "$5,000 / month", "₹25,000 / month", "₹35,000 / month",
-    "₹50,000 / month", "₹75,000 / month"
+    "$4,000 / month", "15000", "18000", "20000", "22000", "25000", "30000", "35000", "40000"
 ]
 
 durations = ["2 Months", "3 Months", "6 Months"]
 
 eligibilities = [
-    "Pursuing B.Tech / B.E. in CS, AI, Data Science or related technical field (Pre-final / Final year)",
+    "Pursuing B.Tech / B.E. in CS, AI, Data Science or related technical field",
     "Pursuing M.Tech, M.S. or Ph.D. in Computer Science, Machine Learning, or AI",
-    "Open to all Bachelor's / Master's students with strong coding and analytical skills",
-    "Pre-final or Final year students in Computer Science, IT, or Mathematics",
-    "Recent graduates or enrolled students with demonstrated project portfolio in AI/ML"
+    "Open to all Bachelor's / Master's students with strong coding skills",
+    "Pre-final or Final year students in Computer Science, IT, or Mathematics"
 ]
 
 def generate_description(title, company, domain, skills):
     return (
         f"Join {company} as a {title} in our {domain} team! "
         f"In this role, you will collaborate with senior engineers to design, build, and deploy cutting-edge AI and software solutions. "
-        f"Key skills required include {', '.join(skills[:3])}. "
-        f"You will gain hands-on experience working on real-world projects and impact millions of users."
+        f"Key skills required include {', '.join(skills[:3])}."
     )
 
 records = []
 target_count = 150
-
-# Guarantee variety across domains
 domain_keys = list(domains.keys())
-index = 1
 
-while len(records) < target_count:
-    domain = domain_keys[index % len(domain_keys)]
+for idx in range(1, target_count + 1):
+    domain = domain_keys[idx % len(domain_keys)]
     template = random.choice(domains[domain])
     title = template[0]
     base_skills = template[1]
     
-    # Pick 3 to 5 skills
     skills_sample = random.sample(base_skills, min(len(base_skills), random.randint(3, 5)))
     skills_str = ", ".join(skills_sample)
     
@@ -93,20 +85,35 @@ while len(records) < target_count:
     eligibility = random.choice(eligibilities)
     description = generate_description(title, company, domain, skills_sample)
     
+    if "Remote" in location:
+        mode = "Remote"
+    elif "Hybrid" in location:
+        mode = "Hybrid"
+    else:
+        mode = "On-site"
+        
     records.append({
-        "title": title,
         "company": company,
+        "company_name": company,
+        "role": title,
+        "title": title,
         "domain": domain,
+        "skills": skills_str,
         "required_skills": skills_str,
         "location": location,
-        "stipend": stipend,
+        "mode": mode,
+        "type": mode,
         "duration": duration,
+        "stipend": stipend,
         "eligibility": eligibility,
         "description": description
     })
-    index += 1
 
-fieldnames = ["title", "company", "domain", "required_skills", "location", "stipend", "duration", "eligibility", "description"]
+fieldnames = [
+    "company", "company_name", "role", "title", "domain",
+    "skills", "required_skills", "location", "mode", "type",
+    "duration", "stipend", "eligibility", "description"
+]
 
 csv_path = "backend/internships.csv"
 
@@ -115,4 +122,10 @@ with open(csv_path, "w", newline="", encoding="utf-8") as f:
     writer.writeheader()
     writer.writerows(records)
 
-print(f"Successfully generated {len(records)} internship records in '{csv_path}'!")
+# Also copy to root
+with open("internships.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(records)
+
+print(f"Successfully generated {len(records)} internship records with complete dual headers in '{csv_path}' and 'internships.csv'!")
