@@ -25,17 +25,20 @@ CREATE TABLE IF NOT EXISTS public.internships (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     company_name TEXT NOT NULL,
+    domain TEXT NOT NULL DEFAULT 'Software Engineering',
     location TEXT,
     type TEXT DEFAULT 'Remote' CHECK (type IN ('Full-time', 'Part-time', 'Remote', 'Hybrid', 'On-site')),
     description TEXT NOT NULL,
     required_skills TEXT[] DEFAULT '{}',
     stipend TEXT,
     duration TEXT,
+    eligibility TEXT,
     posted_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 
 -- ==========================================
 -- 3. STUDENT_SKILLS TABLE
