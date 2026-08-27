@@ -1,112 +1,112 @@
 import React from 'react';
-import { Sparkles, Briefcase, UserCheck, Search } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Sparkles, Database, CheckCircle, Bell } from 'lucide-react';
 
-export default function Navbar({ activeTab, setActiveTab, searchTerm, setSearchTerm }) {
+export default function Navbar({ activeTab }) {
+  const { user } = useAuth();
+
+  const getTitle = () => {
+    switch(activeTab) {
+      case 'dashboard': return 'Student Portal Dashboard';
+      case 'recommendations': return 'AI Recommendation Engine';
+      case 'browse': return 'Explore All Internships';
+      case 'resume': return 'Resume Parsing Engine';
+      case 'skillgap': return 'AI Skill Gap Analyzer';
+      case 'profile': return 'Profile Settings';
+      default: return 'AI Internship Recommendation';
+    }
+  };
+
+  const getSubtitle = () => {
+    switch(activeTab) {
+      case 'dashboard': return 'Overview of recommendations, resume mappings, and active applications';
+      case 'recommendations': return 'Top matched listings ranked by semantic skill alignment';
+      case 'browse': return 'Explore all general positions in the university database';
+      case 'resume': return 'Extract skills and update recommendations from your CV';
+      case 'skillgap': return 'Identify deficiencies, check learning resource tags and boost compatibility';
+      case 'profile': return 'Customize target role domain, skills list, and educational program';
+      default: return 'University portal';
+    }
+  };
+
   return (
-    <header className="glass-card" style={{ borderRadius: 0, borderTop: 0, borderLeft: 0, borderRight: 0, position: 'sticky', top: 0, zIndex: 100 }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+    <header style={{
+      padding: '20px 32px',
+      borderBottom: '1px solid var(--glass-border)',
+      background: 'rgba(9, 13, 22, 0.4)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '16px',
+      position: 'sticky',
+      top: 0,
+      zIndex: 5
+    }}>
+      
+      {/* Title block */}
+      <div>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>
+          {getTitle()}
+        </h2>
+        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+          {getSubtitle()}
+        </p>
+      </div>
+
+      {/* Operations Indicator Info */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         
-        {/* Brand Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Sparkles size={24} color="#ffffff" />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '1.35rem', fontWeight: 800, background: 'linear-gradient(135deg, #ffffff, #cbd5e1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              InternAI
-            </h1>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>AI Internship Recommendation System</p>
-          </div>
+        {/* Supabase Status indicator */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '6px', 
+          background: 'rgba(16, 185, 129, 0.05)', 
+          border: '1px solid rgba(16, 185, 129, 0.2)',
+          padding: '6px 12px',
+          borderRadius: '8px'
+        }}>
+          <Database size={13} color="#10b981" />
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#34d399' }}>
+            {user ? "Cloud Sync (Supabase)" : "Local Simulation Mode"}
+          </span>
+          <div style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: '#10b981',
+            boxShadow: '0 0 8px #10b981'
+          }}></div>
         </div>
 
-        {/* Global Search */}
-        <div style={{ flex: 1, maxWidth: '400px', position: 'relative' }}>
-          <Search size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
-          <input
-            type="text"
-            placeholder="Search internships, companies, skills..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 14px 10px 40px',
-              borderRadius: '20px',
-              border: '1px solid var(--glass-border)',
-              background: 'rgba(15, 23, 42, 0.6)',
-              color: 'var(--text-main)',
-              fontSize: '0.9rem',
-              outline: 'none'
-            }}
-          />
-        </div>
-
-        {/* Navigation Tabs */}
-        <nav style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={() => setActiveTab('recommendations')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 18px',
-              borderRadius: '12px',
-              border: activeTab === 'recommendations' ? '1px solid var(--primary)' : '1px solid transparent',
-              background: activeTab === 'recommendations' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25))' : 'transparent',
-              color: activeTab === 'recommendations' ? '#ffffff' : 'var(--text-muted)',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              transition: 'all 0.2s'
-            }}
-          >
-            <Sparkles size={18} color={activeTab === 'recommendations' ? '#c084fc' : 'currentColor'} />
-            AI Matches
-          </button>
-
-          <button
-            onClick={() => setActiveTab('browse')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 18px',
-              borderRadius: '12px',
-              border: activeTab === 'browse' ? '1px solid var(--primary)' : '1px solid transparent',
-              background: activeTab === 'browse' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25))' : 'transparent',
-              color: activeTab === 'browse' ? '#ffffff' : 'var(--text-muted)',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              transition: 'all 0.2s'
-            }}
-          >
-            <Briefcase size={18} color={activeTab === 'browse' ? '#6366f1' : 'currentColor'} />
-            Browse All
-          </button>
-
-          <button
-            onClick={() => setActiveTab('profile')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 18px',
-              borderRadius: '12px',
-              border: activeTab === 'profile' ? '1px solid var(--primary)' : '1px solid transparent',
-              background: activeTab === 'profile' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25))' : 'transparent',
-              color: activeTab === 'profile' ? '#ffffff' : 'var(--text-muted)',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              transition: 'all 0.2s'
-            }}
-          >
-            <UserCheck size={18} color={activeTab === 'profile' ? '#10b981' : 'currentColor'} />
-            My Skills
-          </button>
-        </nav>
+        {/* Notifications pill */}
+        <button style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: '8px',
+          padding: '8px',
+          cursor: 'pointer',
+          color: 'var(--text-muted)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative'
+        }}>
+          <Bell size={16} />
+          <div style={{
+            position: 'absolute',
+            top: '2px',
+            right: '2px',
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: 'var(--primary)'
+          }}></div>
+        </button>
 
       </div>
+
     </header>
   );
 }

@@ -1,108 +1,193 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { sampleInternships } from '../data/sampleData';
 import InternshipCard from './InternshipCard';
-import { Sparkles, SlidersHorizontal, AlertCircle } from 'lucide-react';
+import { Sparkles, SlidersHorizontal, AlertCircle, Search, Compass } from 'lucide-react';
 
-export default function RecommendationView({ recommendations, onViewDetails, onGoToSkills, skillsCount }) {
+export default function RecommendationView({ onViewDetails }) {
+  const { profile, calculateMatch } = useAuth();
+  
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDomain, setSelectedDomain] = useState('All');
+  const [selectedMode, setSelectedMode] = useState('All');
   const [minMatch, setMinMatch] = useState(0);
 
-  const filteredRecs = recommendations.filter(r => (r.match_score || 0) >= minMatch);
+  // Compute matches
+  const processedRecommendations = sampleInternships.map(internship => {
+    const match = calculateMatch(internship.skills);
+    return {
+      internship,
+      match_score: match.score,
+      match_reasons: match.reasons,
+      matching_skills: match.matching,
+      missing_skills: match.missing
+    };
+  }).sort((a, b) => b.match_score - a.match_score);
+
+  // Filter recommendations
+  const filteredRecommendations = processedRecommendations.filter(rec => {
+    // 1. Text Search query filter
+    const titleMatch = rec.internship.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const companyMatch = rec.internship.company.toLowerCase().includes(searchQuery.toLowerCase());
+    const skillsMatch = rec.internship.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch = titleMatch || companyMatch || skillsMatch;
+
+    // 2. Domain filter
+    const matchesDomain = selectedDomain === 'All' || rec.internship.domain === selectedDomain;
+
+    // 3. Remote/On-site filter
+    const matchesMode = selectedMode === 'All' || rec.internship.type === selectedMode;
+
+    // 4. Match score threshold slider filter
+    const matchesThreshold = rec.match_score >= minMatch;
+
+    return matchesSearch && matchesDomain && matchesMode && matchesThreshold;
+  });
+
+  const domains = ['All', 'Artificial Intelligence', 'Software Engineering', 'Data Science', 'Design & Product'];
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
       {/* Header Banner */}
-      <div className="glass-card" style={{ padding: '28px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2))', border: '1px solid rgba(168, 85, 247, 0.4)' }}>
+      <div className="glass-card" style={{ padding: '28px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15))', border: '1px solid rgba(168, 85, 247, 0.25)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <span className="badge-glow" style={{ marginBottom: '8px' }}>
-              <Sparkles size={14} /> AI Recommendation Engine
+              <Sparkles size={14} /> AI Recommendations
             </span>
             <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', marginTop: '6px' }}>
-              Top Matched Internships for You
+              Your Tailored Internship Match Engine
             </h2>
             <p style={{ color: '#cbd5e1', fontSize: '0.92rem', marginTop: '4px' }}>
-              Ranked dynamically by matching your skill set ({skillsCount} skills active) against required internship qualifications.
+              Sorted in descending order of compatibility with your profile. Add more skills to increase match relevance.
             </p>
           </div>
-
-          <button
-            onClick={onGoToSkills}
-            style={{
-              padding: '10px 20px',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              background: 'rgba(15, 23, 42, 0.6)',
-              color: '#ffffff',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '0.88rem'
-            }}
-          >
-            Edit Skill Inventory
-          </button>
         </div>
       </div>
 
-      {/* Score Filter */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          <SlidersHorizontal size={18} />
-          <span>Minimum Match Threshold:</span>
+      {/* Interactive Filters Panel */}
+      <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>
+          <SlidersHorizontal size={16} />
+          <span>Search & Advanced Filters</span>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr 1fr 1fr',
+          gap: '12px'
+        }} className="filters-grid">
+          
+          {/* Keyword Search */}
+          <div style={{ position: 'relative' }}>
+            <Search size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              placeholder="Search by role, company or skill..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '9px 12px 9px 36px',
+                borderRadius: '8px',
+                border: '1px solid var(--glass-border)',
+                background: 'rgba(15, 23, 42, 0.6)',
+                color: '#ffffff',
+                fontSize: '0.85rem',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          {/* Domain Dropdown */}
           <select
-            value={minMatch}
-            onChange={(e) => setMinMatch(Number(e.target.value))}
+            value={selectedDomain}
+            onChange={(e) => setSelectedDomain(e.target.value)}
             style={{
-              padding: '6px 12px',
+              padding: '9px 12px',
               borderRadius: '8px',
               border: '1px solid var(--glass-border)',
-              background: 'rgba(15, 23, 42, 0.8)',
+              background: 'rgba(15, 23, 42, 0.6)',
               color: '#ffffff',
-              fontSize: '0.88rem',
-              outline: 'none'
-            }}
-          >
-            <option value={0}>All Matches (0%+)</option>
-            <option value={40}>Above 40% Match</option>
-            <option value={60}>Above 60% Match</option>
-            <option value={75}>High Match Only (75%+)</option>
-          </select>
-        </div>
-
-        <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-          Showing {filteredRecs.length} recommendations
-        </span>
-      </div>
-
-      {/* Recommendation Grid */}
-      {filteredRecs.length === 0 ? (
-        <div className="glass-card" style={{ padding: '48px', textAlign: 'center' }}>
-          <AlertCircle size={40} color="#f59e0b" style={{ margin: '0 auto 12px auto' }} />
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff' }}>No Recommendations Found</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px', maxWidth: '500px', margin: '6px auto 20px auto' }}>
-            {skillsCount === 0 
-              ? "You haven't added any skills to your profile yet! Add your skills to generate AI recommendation match rankings."
-              : "Try lowering your minimum match threshold or adding more skills to your profile."}
-          </p>
-          <button
-            onClick={onGoToSkills}
-            style={{
-              padding: '12px 24px',
-              borderRadius: '10px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-              color: '#ffffff',
-              fontWeight: 700,
+              fontSize: '0.85rem',
+              outline: 'none',
               cursor: 'pointer'
             }}
           >
-            Add Skills to Profile
-          </button>
+            {domains.map((dom) => (
+              <option key={dom} value={dom}>{dom === 'All' ? 'All Domains' : dom}</option>
+            ))}
+          </select>
+
+          {/* Mode Dropdown */}
+          <select
+            value={selectedMode}
+            onChange={(e) => setSelectedMode(e.target.value)}
+            style={{
+              padding: '9px 12px',
+              borderRadius: '8px',
+              border: '1px solid var(--glass-border)',
+              background: 'rgba(15, 23, 42, 0.6)',
+              color: '#ffffff',
+              fontSize: '0.85rem',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="All">All Types</option>
+            <option value="On-site">On-site Only</option>
+            <option value="Remote">Remote Only</option>
+          </select>
+
+          {/* Threshold Filter Slider */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+              <span>Min Match Score:</span>
+              <span style={{ color: 'var(--primary)' }}>{minMatch}%</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={minMatch}
+              onChange={(e) => setMinMatch(Number(e.target.value))}
+              style={{
+                width: '100%',
+                height: '4px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                outline: 'none',
+                borderRadius: '2px',
+                cursor: 'pointer'
+              }}
+            />
+          </div>
+
+        </div>
+      </div>
+
+      {/* Grid: Recommendation cards results */}
+      {filteredRecommendations.length === 0 ? (
+        <div className="glass-card" style={{ padding: '60px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+          <AlertCircle size={40} color="#f59e0b" />
+          <div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff' }}>No matching internships found</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '6px', maxWidth: '460px' }}>
+              Try lowering the minimum match threshold, clearing some filter rules, or adding more technical skills to your student profile.
+            </p>
+          </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
-          {filteredRecs.map((rec, idx) => (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+          gap: '24px'
+        }}>
+          {filteredRecommendations.map((rec) => (
             <InternshipCard
-              key={idx}
+              key={rec.internship.id}
               item={rec.internship}
               matchScore={rec.match_score}
               matchReasons={rec.match_reasons}
